@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Pop it all</title>
+		<meta charset="UTF-8">
+	</head>
+	<body onload="startGame()">
+		<div id="assets" style="display: hidden;">
+			<audio id="pop">
+  				<source src="pop.wav" type="audio/wav">
+			</audio>
+		</div>
+		<script>
+			// menu
+			const titleText = new text(content="Pop It All", color="black", x=360, y=100, size=80, font="Arial");
+			const playBtn = new button(color="lightgreen", x=400, y=200, width=200, height=80, textContent="Play", textColor="black", textX=440, textY=260, textSize=70, textFont="sans-serif");
+			let loop;
+			
+			// game timer
+			let timer;
+			let timeLeft;
+			let timerDisplay = new text(content="Error 213", color="lightblue", x=10, y=60, size=60, font="Arial");
+			
+			// game squares
+			let squares = [];
+			let square;
+			let squareTimer;
+			
+			
+			// gameArea(canvas)
+			const game = {
+				canvas: document.createElement("canvas"),
+				width: 1000,
+				height: 650,
+				screen: "none",
+				initial: function(){
+					this.context = this.canvas.getContext("2d");
+					this.canvas.width = this.width;
+					this.canvas.height = this.height;
+					// this.canvas.style.border = "5px solid black";
+					document.body.append(this.canvas);
+				}
+			}
+			
+			// when the page loads
+			function startGame(){
+				game.initial();
+				loop = setInterval(tick, 60);
+				openMenu();
+			}
+			
+			// opens menu
+			function openMenu(){
+				game.screen = "menu";
+			}
+			
+			// opens game
+			function openGame(){
+				// initial
+				game.screen ="game";
+				
+				// timer
+				timeLeft = 15;
+				timerDisplay.content = `${timeLeft}s`;
+				
+				timer = setInterval(() => {
+					timeLeft-=1;
+					timerDisplay.content = `${timeLeft}s`;
+					if(timeLeft === 0){
+						openMenu();
+					}
+				}, 1000);
+				
+				// squares
+				squares = [];
+				let loopFor = Math.floor(Math.random() * 6) + 1;
+				for(let i = 0; i<=loopFor; i++){
+					squares.push(new button(color="black", x=Math.random() * game.width, y=Math.random() * game.height, width=50, height=50, textContent="", textColor="black", textX=0, textY=0, textSize=0, textFont="Arial"));
+				}
+				
+				squareTimer = setInterval(() => {
+					squares.push(new button(color="black", x=Math.random() * game.width, y=Math.random() * game.height, width=50, height=50, textContent="", textColor="black", textX=0, textY=0, textSize=0, textFont="Arial"));
+				}, 500);
+			}
+			
+			// game loop
+			function tick(){
+				game.context.clearRect(0,0,game.width,game.height);
+				if(game.screen === "menu"){
+					titleText.show();
+					playBtn.show();
+				} else if(game.screen === "game"){
+					squares.forEach((squareObject) => {
+						squareObject.show();
+					});
+					timerDisplay.show();
+				}
+			}
+			
+			// checks click on canvas
+			game.canvas.addEventListener("click", event => {
+				// gets mouse pos
+				const mouse = {
+					x: event.offsetX,
+					y: event.offsetY
+				}
+				// declares clicked var
+				let clicked;
+				
+				if(game.screen==="menu"){
+					// checks if clicked play btn
+					clicked = checkClick(mouse.x, mouse.y, playBtn.x, playBtn.y, playBtn.width, playBtn.height);
+					if(clicked){
+						openGame();
+					}
+				} else if(game.screen==="game"){
+					squares.forEach(squareObject =>{
+						clicked = checkClick(mouse.x, mouse.y, squareObject.x, squareObject.y, squareObject.width, squareObject.height);
+						if(clicked){
+							document.getElementById("pop").play();
+							squareObject.x = Math.random() * game.width;
+							squareObject.y = Math.random() * game.height;
+						}
+					});
+				}
+				
+				
+			});
+			
+			// checks click
+			function checkClick(mouseX, mouseY, objectX, objectY, objectWidth, objectHeight){
+				if(mouseX > objectX && mouseX < objectX+objectWidth){
+					if(mouseY > objectY && mouseY < objectY+objectHeight){
+						return true;
+					} else {
+						return false;
+					}
+				} else {
+					return false;
+				}
+			}
+			
+			// creates text
+			function text(content, color, x, y, size, font){
+				this.content = content;
+				this.color = color;
+				this.x = x;
+				this.y = y;
+				this.size = size;
+				this.font = font;
+				this.show = function() {
+					game.context.fillStyle = this.color;
+					game.context.font = `${this.size}px ${this.font}`;
+					game.context.fillText(this.content, this.x, this.y);
+				}
+			}
+			
+			// creates button
+			function button(color, x, y, width, height, textContent, textColor, textX, textY, textSize, textFont){
+				this.color = color;
+				this.x = x;
+				this.y = y;
+				this.width = width;
+				this.height = height;
+				this.textContent = textContent;
+				this.textColor = textColor;
+				this.textX = textX;
+				this.textY = textY;
+				this.textSize = textSize;
+				this.textFont = textFont;
+				this.show = function(){
+					// shows background
+					game.context.fillStyle = this.color;
+					game.context.fillRect(this.x, this.y, this.width, this.height);
+					// shows text
+					game.context.fillStyle = this.textColor;
+					game.context.font = `${this.textSize}px ${this.textFont}`;
+					game.context.fillText(this.textContent, this.textX, this.textY);
+				}
+			}
+		</script>
+	</body>
+</html>
